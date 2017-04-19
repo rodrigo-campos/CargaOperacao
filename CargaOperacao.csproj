@@ -5,5 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="6.4.1" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XPath" Version="4.3.0" />
   </ItemGroup>
 </Project>

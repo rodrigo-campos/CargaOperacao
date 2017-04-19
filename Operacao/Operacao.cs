@@ -30,6 +30,6 @@ namespace CargaOperacao
         public decimal PUEmissao { get; internal set; }
         public decimal Quantidade { get; internal set; }
         public IEnumerable<CondicaoResgate> CondicoesResgate { get; internal set; }
-        public bool PossuiCondicaoResgate => CondicoesResgate.Any();
+        public bool PossuiCondicaoResgate => CondicoesResgate?.Any() ?? false;
     }
 }

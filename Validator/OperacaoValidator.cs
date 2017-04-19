@@ -8,10 +8,11 @@ namespace CargaOperacao
     public class OperacaoValidator : AbstractValidator<Operacao>
     {
         HashSet<string> _hsContrapartes = null;
-        HashSet<string> _hsVeiculosLegais = null;
+        HashSet<string> _hsVeiculosLegais = null;        
         public OperacaoValidator(IRepoOperacao repo)
         {
             _hsContrapartes = new HashSet<string>(repo.ObterTodosCodigosPessoa());
+            var _condicaoResgateValidator = new CondicaoResgateValidator();
 
             CascadeMode = CascadeMode.StopOnFirstFailure;
 
@@ -30,7 +31,7 @@ namespace CargaOperacao
             RuleFor(op => op.StatusOperacao).MustHaveAValidEnumValue();
             RuleFor(op => op.PUEmissao).GreaterThan(0).When(op => op.TipoOperacao.Equals(TipoOperacao.Emissao));
             RuleFor(op => op.Quantidade).GreaterThan(0);
-            RuleFor(op => op.CondicoesResgate).SetCollectionValidator(new CondicaoResgateValidator())
+            RuleFor(op => op.CondicoesResgate).SetCollectionValidator(_condicaoResgateValidator)
                 .DependentRules(d =>
                 {
                     d.RuleFor(op => op.CondicoesResgate).Must(CobrirDataInicioADataVencimento);
