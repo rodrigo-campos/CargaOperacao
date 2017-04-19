@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace CargaOperacao
@@ -12,19 +14,43 @@ namespace CargaOperacao
             return (value.Trim().Equals("S") || value.Trim().Equals("1"));
         }
 
-        public static DateTime ToDateTime(this string value)
+        public static T ObterValor<T>(this XElement pai, string filho)
         {
-            return DateTime.Parse(value);
+            var value = pai.Element(filho).Value;
+
+            if (typeof(T) == typeof(bool))
+            {
+                value = value.ToBool().ToString();
+            }
+            else if (typeof(T).GetTypeInfo().IsEnum)
+            {
+                return (T)Enum.Parse(typeof(T), value);
+            }
+            return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
         }
 
-        public static decimal ToDecimal(this string value)
+        public static string ObterValorOperacao(this XElement pai, string filho)
         {
-            return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+            return ObterValorOperacao<string>(pai, filho);
         }
 
-        public static string GetValue(this XElement item, string element)
+        public static T ObterValorOperacao<T>(this XElement pai, string filho)
         {
-            return item.Descendants().Elements().Any() ? item.Descendants().Elements().First(i => i.Name == element).Value : item.Descendants().First(i => i.Name == element).Value;
+            return ObterValor<T>(pai.Element("Body").Element("NEGRFPRV0002"), filho);
+        }
+
+        public static IEnumerable<XElement> ObterCondicaoResgate(this XElement item)
+        {
+            return item.Element("Body").Element("NEGRFPRV0002").Element("CondicoesResgate").Elements("CondicaoResgate");
+        }
+
+        public static string ObterValorHeader(this XElement pai, string filho)
+        {
+            return ObterValorHeader<string>(pai, filho);
+        }
+        public static T ObterValorHeader<T>(this XElement pai, string filho)
+        {
+            return ObterValor<T>(pai.Element("Header"), filho);
         }
 
     }

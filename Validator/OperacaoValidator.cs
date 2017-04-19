@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentValidation;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace CargaOperacao
 {
@@ -82,7 +84,7 @@ namespace CargaOperacao
             return _hsContrapartes.Contains(ctp.CodigoExterno);
         }
 
-        private class DatasCondicaoPOCO
+        private struct DatasCondicaoPOCO
         {
             public DateTime DataMovimentoOperacao { get; set; }
             public DateTime DataVencimentoOperacao { get; set; }
