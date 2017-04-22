@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentValidation;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace CargaOperacao
 {
@@ -20,17 +18,17 @@ namespace CargaOperacao
 
             RuleFor(op => op.CodigoExterno).NotNull().NotEmpty().WithMessage("Código externo não informado");
             //RuleFor(op => op.VeiculoLegal).NotNull().Must(BeAValidVeiculoLegal);
-            RuleFor(op => op.Contraparte).NotNull().Must(BeAValidContraparte);
-            RuleFor(op => op.TipoContraparte).MustHaveAValidEnumValue();
-            RuleFor(op => op.TipoOperacao).MustHaveAValidEnumValue();
-            RuleFor(op => op.Indexador).MustHaveAValidEnumValue();
+            RuleFor(op => op.Contraparte).NotNull().Must(ContraparteValida);
+            RuleFor(op => op.TipoContraparte).IsInEnum();
+            RuleFor(op => op.TipoOperacao).IsInEnum();
+            RuleFor(op => op.Indexador).IsInEnum();
             RuleFor(op => op.DataInicio).LessThanOrEqualTo(op => op.DataMovimento);
             RuleFor(op => op.DataMovimento).LessThanOrEqualTo(op => op.DataVencimento);
             RuleFor(op => op.Valor).GreaterThan(0);
-            RuleFor(op => op.LocalLiquidacao).MustHaveAValidEnumValue();
-            RuleFor(op => op.ModalidadeLiquidacao).MustHaveAValidEnumValue();
-            RuleFor(op => op.FormaLiquidacao).MustHaveAValidEnumValue();
-            RuleFor(op => op.StatusOperacao).MustHaveAValidEnumValue();
+            RuleFor(op => op.LocalLiquidacao).IsInEnum();
+            RuleFor(op => op.ModalidadeLiquidacao).IsInEnum();
+            RuleFor(op => op.FormaLiquidacao).IsInEnum();
+            RuleFor(op => op.StatusOperacao).IsInEnum();
             RuleFor(op => op.PUEmissao).GreaterThan(0).When(op => op.TipoOperacao.Equals(TipoOperacao.Emissao));
             RuleFor(op => op.Quantidade).GreaterThan(0);
             RuleFor(op => op.CondicoesResgate).SetCollectionValidator(_condicaoResgateValidator)
@@ -43,11 +41,11 @@ namespace CargaOperacao
                         DataVencimentoOperacao = op.DataVencimento,
                         DataInicioCondicao = op.CondicoesResgate.Min(c => c.DataInicio),
                         DataFimCondicao = op.CondicoesResgate.Max(c => c.DataFim)
-                    }).Must(CompreenderDoInicioAoFimDaOperacao);
+                    }).Must(PeriodoCondicaoResgateIgualAoPeriodoEmissao);
                 }).When(op => op.PossuiCondicaoResgate);
         }
 
-        private bool CompreenderDoInicioAoFimDaOperacao(DatasCondicaoPOCO arg)
+        private bool PeriodoCondicaoResgateIgualAoPeriodoEmissao(DatasCondicaoPOCO arg)
         {
             return arg.DataInicioCondicao == arg.DataMovimentoOperacao &&
                    arg.DataFimCondicao == arg.DataVencimentoOperacao;
@@ -79,7 +77,7 @@ namespace CargaOperacao
             return _hsVeiculosLegais.Contains(vl.CodigoExterno);
         }
 
-        private bool BeAValidContraparte(PessoaSimples ctp)
+        private bool ContraparteValida(PessoaSimples ctp)
         {
             return _hsContrapartes.Contains(ctp.CodigoExterno);
         }

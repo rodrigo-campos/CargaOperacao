@@ -2,13 +2,8 @@
 using System.Xml.Linq;
 using System.Linq;
 using FluentValidation;
-using System.Diagnostics;
 using static CargaOperacao.Util;
 using System.Collections.Generic;
-using System.Xml.XPath;
-using System.Reflection;
-using System.Globalization;
-using System.Threading.Tasks;
 
 namespace CargaOperacao
 {
@@ -18,27 +13,22 @@ namespace CargaOperacao
         {
 
             Console.WriteLine("Started.");
-            const string path = @"E:\CargaEmissaoCDB_CDI.xml";
-
-            IEnumerable<Operacao> operacoes = null;
+            const string path = @"CargaEmissaoCDB_CDI.xml";
 
             var carga = new CargaOperacaoXDocument(path);
 
-            WithWatch(w => $"Took {w.ElapsedMilliseconds}ms to parse.", () =>
-            {
-                operacoes = carga.CarregarOperacoes();
-            });
+            var operacoes = WithWatch<IEnumerable<Operacao>>(w => $"Took {w.ElapsedMilliseconds}ms to parse.", () => carga.CarregarOperacoes());
 
             var repo = new RepoOperacaoCarga(XDocument.Load(path));
 
-            WithWatch(w => $"Took {w.ElapsedMilliseconds}ms to validate.", () =>
+            bool sucesso = WithWatch(w => $"Took {w.ElapsedMilliseconds}ms to validate.", () =>
             {
                 var validator = new OperacaoValidator(repo);
                 foreach (var op in operacoes)
                 {
                     validator.ValidateAndThrowAsync(op);
                 }
-
+                return true;
             });
 
             Console.WriteLine("Done.");
@@ -52,10 +42,7 @@ namespace CargaOperacao
 
         public CargaOperacaoXDocument(string path)
         {
-            WithWatch(w => $"Took {w.ElapsedMilliseconds}ms to load.", () =>
-            {
-                _xml = XDocument.Load(path, LoadOptions.None);
-            });
+            _xml = WithWatch(w => $"Took {w.ElapsedMilliseconds}ms to load.", () => XDocument.Load(path, LoadOptions.None));
         }
         public IEnumerable<Operacao> CarregarOperacoes()
         {
@@ -63,8 +50,7 @@ namespace CargaOperacao
 
             if (_xml?.Root == null)
                 throw new Exception("XML inválido");
-
-            operacoes = _xml.Root.Descendants().Elements("SeniorSolution")
+            operacoes = _xml.Root.Descendants().Where(i => i.Name == "SeniorSolution").AsParallel()
                 .Select(o =>
                 new Operacao()
                 {
